@@ -81,43 +81,63 @@ with tab1:
 with tab2:
     st.subheader("Análisis adicional")
 
-    # Filtro local: Horsepower
-    st.markdown("#### Filtro adicional: Rango de Caballos de Fuerza")
-    hp_min = int(filtered_df["Horsepower"].min())
-    hp_max = int(filtered_df["Horsepower"].max())
-    hp_range = st.slider("Selecciona el rango de Horsepower", hp_min, hp_max, (hp_min, hp_max))
+    if filtered_df.empty:
+        st.warning("No hay datos con los filtros seleccionados.")
+    else:
+        # Filtro adicional por Horsepower
+        st.markdown("#### Filtro adicional: Rango de Caballos de Fuerza")
+        hp_min = int(filtered_df["Horsepower"].min())
+        hp_max = int(filtered_df["Horsepower"].max())
+        hp_range = st.slider("Selecciona el rango de Horsepower", hp_min, hp_max, (hp_min, hp_max))
 
-    # Aplicar filtro local
-    filtered_hp_df = filtered_df[
-        (filtered_df["Horsepower"] >= hp_range[0]) & 
-        (filtered_df["Horsepower"] <= hp_range[1])
-    ]
+        # Aplicar filtro de horsepower
+        filtered_hp_df = filtered_df[
+            (filtered_df["Horsepower"] >= hp_range[0]) & 
+            (filtered_df["Horsepower"] <= hp_range[1])
+        ]
 
-    col1, col2 = st.columns(2)
+        # --- DRILL-THROUGH: selección de intervalo ---
+        selection = alt.selection_interval(encodings=['x'])
 
-    with col1:
-        st.markdown("### Distribución de Caballos de Fuerza")
+        # Histograma con selección
+        st.markdown("### Distribución de Caballos de Fuerza (Haz selección)")
         hist_hp = alt.Chart(filtered_hp_df).mark_bar().encode(
-            alt.X("Horsepower", bin=alt.Bin(maxbins=30)),
-            y='count()',
-            color='Origin'
+            x=alt.X("Horsepower", bin=alt.Bin(maxbins=30), title="Horsepower"),
+            y=alt.Y('count()', title="Cantidad"),
+            color=alt.condition(selection, 'Origin', alt.value('lightgray')),
+            tooltip=['Horsepower', 'count()']
+        ).add_selection(
+            selection
         )
-        st.altair_chart(hist_hp, use_container_width=True)
 
-    with col2:
-        st.markdown("### Boxplot de MPG por Región")
+        # Boxplot filtrado por selección del histograma
+        st.markdown("### Boxplot de MPG por Región (Filtrado por selección en Horsepower)")
         box_mpg = alt.Chart(filtered_hp_df).mark_boxplot().encode(
             x='Origin',
             y='Miles_per_Gallon',
             color='Origin'
+        ).transform_filter(
+            selection  # <- esto aplica el filtro de la selección
         )
-        st.altair_chart(box_mpg, use_container_width=True)
 
-    st.markdown("### Evolución del Peso Promedio por Año (Filtrado)")
-    avg_weight = filtered_hp_df.groupby('Year')['Weight'].mean().reset_index()
-    line_chart = alt.Chart(avg_weight).mark_line(point=True).encode(
-        x='Year:O',
-        y='Weight',
-        tooltip=['Year', 'Weight']
-    )
-    st.altair_chart(line_chart, use_container_width=True)
+        st.altair_chart(hist_hp & box_mpg, use_container_width=True)
+
+        # Línea de peso promedio por año (también filtrada por selección)
+        st.markdown("### Evolución del Peso Promedio por Año (Filtrado por Horsepower)")
+        avg_weight = (
+            filtered_hp_df
+            .groupby(['Year', 'Horsepower'])
+            .agg({'Weight': 'mean'})
+            .reset_index()
+        )
+
+        line_chart = alt.Chart(avg_weight).mark_line(point=True).encode(
+            x='Year:O',
+            y='Weight',
+            color=alt.value('steelblue'),
+            tooltip=['Year', 'Weight']
+        ).transform_filter(
+            selection
+        )
+
+        st.altair_chart(line_chart, use_container_width=True)
