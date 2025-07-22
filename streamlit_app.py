@@ -31,7 +31,17 @@ color_by = st.sidebar.selectbox("Color por", ["None"] + df.columns.tolist(), ind
 # Filtro por año
 year_min, year_max = int(df["Year"].min()), int(df["Year"].max())
 year_range = st.sidebar.slider("Rango de Año", year_min, year_max, (year_min, year_max))
-filtered_df = df[(df["Year"] >= year_range[0]) & (df["Year"] <= year_range[1])]
+
+# Filtro por origen
+origins = df['Origin'].unique().tolist()
+selected_origins = st.sidebar.multiselect("Filtrar por Origen", origins, default=origins)
+
+# Aplicar filtros globales
+filtered_df = df[
+    (df["Year"] >= year_range[0]) &
+    (df["Year"] <= year_range[1]) &
+    (df["Origin"].isin(selected_origins))
+]
 
 # Crear pestañas
 tab1, tab2 = st.tabs(["Explorador principal", "Análisis adicional"])
@@ -56,11 +66,23 @@ with tab1:
 with tab2:
     st.subheader("Análisis adicional")
 
+    # Filtro local: Horsepower
+    st.markdown("#### Filtro adicional: Rango de Caballos de Fuerza")
+    hp_min = int(filtered_df["Horsepower"].min())
+    hp_max = int(filtered_df["Horsepower"].max())
+    hp_range = st.slider("Selecciona el rango de Horsepower", hp_min, hp_max, (hp_min, hp_max))
+
+    # Aplicar filtro local
+    filtered_hp_df = filtered_df[
+        (filtered_df["Horsepower"] >= hp_range[0]) & 
+        (filtered_df["Horsepower"] <= hp_range[1])
+    ]
+
     col1, col2 = st.columns(2)
 
     with col1:
         st.markdown("### Distribución de Caballos de Fuerza")
-        hist_hp = alt.Chart(filtered_df).mark_bar().encode(
+        hist_hp = alt.Chart(filtered_hp_df).mark_bar().encode(
             alt.X("Horsepower", bin=alt.Bin(maxbins=30)),
             y='count()',
             color='Origin'
@@ -69,7 +91,7 @@ with tab2:
 
     with col2:
         st.markdown("### Boxplot de MPG por Región")
-        box_mpg = alt.Chart(filtered_df).mark_boxplot().encode(
+        box_mpg = alt.Chart(filtered_hp_df).mark_boxplot().encode(
             x='Origin',
             y='Miles_per_Gallon',
             color='Origin'
@@ -77,7 +99,7 @@ with tab2:
         st.altair_chart(box_mpg, use_container_width=True)
 
     st.markdown("### Evolución del Peso Promedio por Año (Filtrado)")
-    avg_weight = filtered_df.groupby('Year')['Weight'].mean().reset_index()
+    avg_weight = filtered_hp_df.groupby('Year')['Weight'].mean().reset_index()
     line_chart = alt.Chart(avg_weight).mark_line(point=True).encode(
         x='Year:O',
         y='Weight',
