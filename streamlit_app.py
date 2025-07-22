@@ -96,34 +96,27 @@ with tab2:
             (filtered_df["Horsepower"] <= hp_range[1])
         ]
 
-        # --- DRILL-THROUGH: selección de intervalo ---
+        # Selección de intervalo
         selection = alt.selection_interval(encodings=['x'])
 
-        # Histograma con selección
-        st.markdown("### Distribución de Caballos de Fuerza (Haz selección)")
+        # Histograma
         hist_hp = alt.Chart(filtered_hp_df).mark_bar().encode(
             x=alt.X("Horsepower", bin=alt.Bin(maxbins=30), title="Horsepower"),
             y=alt.Y('count()', title="Cantidad"),
             color=alt.condition(selection, 'Origin', alt.value('lightgray')),
             tooltip=['Horsepower', 'count()']
-        ).add_selection(
-            selection
-        )
+        ).add_selection(selection).properties(height=300)
 
-        # Boxplot filtrado por selección del histograma
-        st.markdown("### Boxplot de MPG por Región (Filtrado por selección en Horsepower)")
+        # Boxplot
         box_mpg = alt.Chart(filtered_hp_df).mark_boxplot().encode(
             x='Origin',
             y='Miles_per_Gallon',
             color='Origin'
         ).transform_filter(
-            selection  # <- esto aplica el filtro de la selección
-        )
+            selection
+        ).properties(height=300)
 
-        st.altair_chart(hist_hp & box_mpg, use_container_width=True)
-
-        # Línea de peso promedio por año (también filtrada por selección)
-        st.markdown("### Evolución del Peso Promedio por Año (Filtrado por Horsepower)")
+        # Línea de evolución del peso
         avg_weight = (
             filtered_hp_df
             .groupby(['Year', 'Horsepower'])
@@ -136,8 +129,20 @@ with tab2:
             y='Weight',
             color=alt.value('steelblue'),
             tooltip=['Year', 'Weight']
-        ).transform_filter(
-            selection
-        )
+        ).transform_filter(selection).properties(height=300)
 
+        # Mostrar los gráficos en columnas (arriba) y fila (abajo)
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("### Distribución de Horsepower")
+            st.altair_chart(hist_hp, use_container_width=True)
+
+        with col2:
+            st.markdown("### Boxplot de MPG por Origen")
+            st.altair_chart(box_mpg, use_container_width=True)
+
+        # Gráfico de línea debajo
+        st.markdown("### Evolución del Peso Promedio por Año")
         st.altair_chart(line_chart, use_container_width=True)
+
