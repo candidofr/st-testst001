@@ -96,10 +96,10 @@ with tab2:
             (filtered_df["Horsepower"] <= hp_range[1])
         ]
 
-        # Selección de intervalo
+        # Selección de intervalo para el histograma
         selection = alt.selection_interval(encodings=['x'])
 
-        # Histograma
+        # Histograma con selección
         hist_hp = alt.Chart(filtered_hp_df).mark_bar().encode(
             x=alt.X("Horsepower", bin=alt.Bin(maxbins=30), title="Horsepower"),
             y=alt.Y('count()', title="Cantidad"),
@@ -107,19 +107,17 @@ with tab2:
             tooltip=['Horsepower', 'count()']
         ).add_selection(selection).properties(height=300)
 
-        # Boxplot
+        # Boxplot de MPG sin filtro por selección
         box_mpg = alt.Chart(filtered_hp_df).mark_boxplot().encode(
             x='Origin',
             y='Miles_per_Gallon',
             color='Origin'
-        ).transform_filter(
-            selection
         ).properties(height=300)
 
-        # Línea de evolución del peso
+        # Gráfico de línea de peso promedio por año y origen
         avg_weight = (
             filtered_hp_df
-            .groupby(['Year', 'Horsepower'])
+            .groupby(['Year', 'Origin'])
             .agg({'Weight': 'mean'})
             .reset_index()
         )
@@ -127,11 +125,11 @@ with tab2:
         line_chart = alt.Chart(avg_weight).mark_line(point=True).encode(
             x='Year:O',
             y='Weight',
-            color=alt.value('steelblue'),
-            tooltip=['Year', 'Weight']
-        ).transform_filter(selection).properties(height=300)
+            color='Origin',
+            tooltip=['Year', 'Weight', 'Origin']
+        ).properties(height=300)
 
-        # Mostrar los gráficos en columnas (arriba) y fila (abajo)
+        # Mostrar los gráficos
         col1, col2 = st.columns(2)
 
         with col1:
@@ -142,7 +140,7 @@ with tab2:
             st.markdown("### Boxplot de MPG por Origen")
             st.altair_chart(box_mpg, use_container_width=True)
 
-        # Gráfico de línea debajo
-        st.markdown("### Evolución del Peso Promedio por Año")
+        st.markdown("### Evolución del Peso Promedio por Año y Origen")
         st.altair_chart(line_chart, use_container_width=True)
+
 
