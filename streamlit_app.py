@@ -8,17 +8,19 @@ st.set_page_config(page_title="Explorador de Autos (Datos Sintéticos)", layout=
 st.title("Explorador Interactivo de Datos de Autos (Sintéticos)")
 
 # Generar datos sintéticos
-np.random.seed(42)
-n = 200
-df = pd.DataFrame({
-    'Horsepower': np.random.normal(150, 40, n).clip(50, 300),
-    'Miles_per_Gallon': np.random.normal(25, 5, n).clip(10, 50),
-    'Weight': np.random.normal(3000, 500, n).clip(1500, 5000),
-    'Acceleration': np.random.normal(15, 2, n).clip(8, 25),
-    'Year': np.random.randint(1970, 1983, n),
-    'Origin': np.random.choice(['USA', 'Europe', 'Japan'], size=n)
-})
-df['Name'] = ['Car ' + str(i) for i in range(n)]
+# np.random.seed(42)
+# n = 200
+# df = pd.DataFrame({
+# 'Horsepower': np.random.normal(150, 40, n).clip(50, 300),
+#     'Miles_per_Gallon': np.random.normal(25, 5, n).clip(10, 50),
+#     'Weight': np.random.normal(3000, 500, n).clip(1500, 5000),
+#     'Acceleration': np.random.normal(15, 2, n).clip(8, 25),
+#     'Year': np.random.randint(1970, 1983, n),
+#     'Origin': np.random.choice(['USA', 'Europe', 'Japan'], size=n)
+# })
+# df['Name'] = ['Car ' + str(i) for i in range(n)]
+
+df = pd.read_csv("data/autos_sinteticos.csv")
 
 # --- Controles globales ---
 st.sidebar.header("Opciones de visualización")
