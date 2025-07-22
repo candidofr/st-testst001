@@ -2,6 +2,7 @@ import streamlit as st
 import altair as alt
 import pandas as pd
 import numpy as np
+import os
 
 # Configuración inicial
 st.set_page_config(page_title="Explorador de Autos (Datos Sintéticos)", layout="wide")
@@ -20,7 +21,19 @@ st.title("Explorador Interactivo de Datos de Autos (Sintéticos)")
 # })
 # df['Name'] = ['Car ' + str(i) for i in range(n)]
 
-df = pd.read_csv("data/autos_sinteticos.csv")
+csv_path = "data/autos_sinteticos.csv"
+
+if os.path.exists(csv_path):
+    st.sidebar.success(f"📁 Archivo encontrado: {csv_path}")
+    try:
+        df = pd.read_csv(csv_path)
+        st.sidebar.info(f"✅ Archivo cargado con {df.shape[0]} filas.")
+    except Exception as e:
+        st.sidebar.error(f"❌ Error al leer el CSV: {e}")
+        st.stop()
+else:
+    st.sidebar.error(f"❌ El archivo CSV no se encuentra en: `{csv_path}`")
+    st.stop()
 
 # --- Controles globales ---
 st.sidebar.header("Opciones de visualización")
