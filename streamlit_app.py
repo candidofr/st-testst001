@@ -124,20 +124,23 @@ with tab2:
 
         # Línea de peso promedio por año (también filtrada por selección)
         st.markdown("### Evolución del Peso Promedio por Año (Filtrado por Horsepower)")
+       # Línea de evolución del peso promedio por año y origen (con Horsepower para el filtro)
+        df_line = filtered_hp_df[['Year', 'Origin', 'Weight', 'Horsepower']].copy()
+        
         avg_weight = (
-            filtered_hp_df
-            .groupby(['Year', 'Horsepower'])
+            df_line
+            .groupby(['Year', 'Origin'])
             .agg({'Weight': 'mean'})
             .reset_index()
         )
-
+        
         line_chart = alt.Chart(avg_weight).mark_line(point=True).encode(
             x='Year:O',
             y='Weight',
-            color=alt.value('steelblue'),
-            tooltip=['Year', 'Weight']
+            color='Origin',
+            tooltip=['Year', 'Weight', 'Origin']
         ).transform_filter(
             selection
-        )
+        ).properties(height=300)
 
         st.altair_chart(line_chart, use_container_width=True)
